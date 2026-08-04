@@ -109,6 +109,23 @@
   .chip.primary:hover{filter:brightness(1.05);}
   .chip.ghost{background:#f4f8fc;border-color:#e0ebf3;color:var(--muted);font-weight:600;}
 
+  /* location card */
+  .loc-card{margin:2px 4px 20px 47px;background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 8px 22px rgba(0,48,87,.10);overflow:hidden;animation:rise .4s .05s both;}
+  .loc-head{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;font-weight:800;
+    font-size:15px;padding:12px 15px;letter-spacing:.2px;display:flex;align-items:center;gap:7px;}
+  .loc-addr{padding:14px 15px 4px;font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.45;}
+  .loc-mrt{padding:2px 15px 13px;font-size:14px;color:var(--muted);font-weight:600;line-height:1.4;}
+  .loc-map{margin:0 12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);
+    background:#e7f0f7 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%2394b3c9" stroke-width="1.6"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>') center/32px no-repeat;
+    height:184px;}
+  .loc-map iframe{width:100%;height:100%;border:0;display:block;}
+  .loc-dir{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px;padding:14px;
+    background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;text-decoration:none;font-weight:800;
+    font-size:15.5px;border-radius:13px;transition:filter .2s,transform .12s;box-shadow:0 8px 18px rgba(0,48,87,.22);}
+  .loc-dir:hover{filter:brightness(1.14);transform:translateY(-1px);}
+  .loc-dir svg{width:20px;height:20px;}
+
   /* whatsapp cta inside chat */
   .wa-cta{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 4px 20px 47px;
     background:linear-gradient(135deg,var(--wa),var(--wa-deep));color:#fff;text-decoration:none;
@@ -192,6 +209,8 @@ const T = {
   waBook:{en:"Book on WhatsApp", zh:"用 WhatsApp 预约"},
   waMsg:{en:"Message us on WhatsApp", zh:"用 WhatsApp 联系我们"},
   again:{en:"Is there anything else I can help you with? 😊", zh:"还有什么可以帮您的吗？😊"},
+  locHead:{en:"Our Location", zh:"我们的位置"},
+  locDir:{en:"Get directions", zh:"获取路线"},
 };
 
 const bookWaText={
@@ -402,6 +421,11 @@ const NODES = {
          "<span class='li'>💬 <strong>WhatsApp：</strong>+65 8938 8906</span>"+
          "<span class='li'>预约、路线或任何问题，都欢迎留言给我们。🙏</span>"
     },
+    location:{
+      addr:{en:"706 Jurong West Street 71<br>#01-58, Singapore 640706", zh:"706 Jurong West Street 71<br>#01-58，新加坡 640706"},
+      mrt:{en:"🚆 Nearest MRT: Pioneer (EW28) · about a 10-min walk", zh:"🚆 最近地铁站：先驱站 Pioneer (EW28) · 步行约 10 分钟"},
+      query:"706 Jurong West Street 71 Singapore 640706"
+    },
     wa:{textKey:"ask", labelKey:"waMsg"},
     chips:[{em:"📅",to:"book",primary:true,en:"Book a trial",zh:"预约体验课"},{em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"}]
   }
@@ -455,6 +479,20 @@ function addWaCta(node){
   chat.appendChild(a);scrollDown();
 }
 
+function addLocationCard(loc){
+  const q=encodeURIComponent(loc.query);
+  const card=el("div","loc-card");
+  card.innerHTML=
+    '<div class="loc-head">📍 '+T.locHead[lang]+'</div>'+
+    '<div class="loc-addr">'+loc.addr[lang]+'</div>'+
+    '<div class="loc-mrt">'+loc.mrt[lang]+'</div>'+
+    '<div class="loc-map"><iframe title="Longevity Courtyard location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q='+q+'&z=16&output=embed"></iframe></div>'+
+    '<a class="loc-dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+q+'">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>'+
+      T.locDir[lang]+'</a>';
+  chat.appendChild(card);scrollDown();
+}
+
 function addChips(chips){
   const wrap=el("div","quick"+(chips.length===1?" single":""));
   chips.forEach(c=>{
@@ -473,6 +511,7 @@ function renderNode(id){
   setTimeout(()=>{
     typing.remove();
     addBotBubble(node.text[lang]);
+    if(node.location) addLocationCard(node.location);
     if(node.wa) addWaCta(node);
     if(node.chips) addChips(node.chips);
   }, delay);
