@@ -120,11 +120,19 @@
     background:#e7f0f7 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%2394b3c9" stroke-width="1.6"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>') center/32px no-repeat;
     height:184px;}
   .loc-map iframe{width:100%;height:100%;border:0;display:block;}
-  .loc-dir{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px;padding:14px;
-    background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;text-decoration:none;font-weight:800;
-    font-size:15.5px;border-radius:13px;transition:filter .2s,transform .12s;box-shadow:0 8px 18px rgba(0,48,87,.22);}
-  .loc-dir:hover{filter:brightness(1.14);transform:translateY(-1px);}
-  .loc-dir svg{width:20px;height:20px;}
+  .loc-gethere{margin:14px 12px 12px;padding-top:13px;border-top:1px solid var(--line);}
+  .gh-title{font-size:13.5px;font-weight:800;color:var(--navy);margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+  .gh-toggle{display:flex;gap:6px;background:#eef4f9;padding:4px;border-radius:13px;margin-bottom:11px;}
+  .gh-tab{flex:1;border:0;background:transparent;font-family:inherit;font-weight:700;font-size:14.5px;color:var(--muted);
+    padding:10px;border-radius:10px;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s;min-height:44px;}
+  .gh-tab.active{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(0,48,87,.14);}
+  .gh-body{font-size:14.5px;line-height:1.55;color:var(--ink);margin-bottom:12px;}
+  .gh-body b{color:var(--navy);}
+  .gh-go{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:13px;
+    background:linear-gradient(135deg,var(--cyan),var(--cyan-deep));color:#fff;text-decoration:none;font-weight:800;
+    font-size:15.5px;box-shadow:0 8px 18px rgba(0,166,230,.28);transition:filter .2s,transform .12s;}
+  .gh-go:hover{filter:brightness(1.07);transform:translateY(-1px);}
+  .gh-go svg{width:19px;height:19px;}
 
   /* whatsapp cta inside chat */
   .wa-cta{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 4px 20px 47px;
@@ -211,6 +219,11 @@ const T = {
   again:{en:"Is there anything else I can help you with? 😊", zh:"还有什么可以帮您的吗？😊"},
   locHead:{en:"Our Location", zh:"我们的位置"},
   locDir:{en:"Get directions", zh:"获取路线"},
+  ghTitle:{en:"Getting here from Pioneer MRT (EW28)", zh:"从先驱地铁站 (EW28) 前来"},
+  ghWalkTab:{en:"🚶 Walk", zh:"🚶 步行"},
+  ghBusTab:{en:"🚌 By bus", zh:"🚌 搭巴士"},
+  ghWalkLabel:{en:"Walking directions", zh:"步行路线"},
+  ghBusLabel:{en:"Live bus route", zh:"实时巴士路线"},
 };
 
 const bookWaText={
@@ -424,7 +437,12 @@ const NODES = {
     location:{
       addr:{en:"706 Jurong West Street 71<br>#01-58, Singapore 640706", zh:"706 Jurong West Street 71<br>#01-58，新加坡 640706"},
       mrt:{en:"🚆 Nearest MRT: Pioneer (EW28) · about a 10-min walk", zh:"🚆 最近地铁站：先驱站 Pioneer (EW28) · 步行约 10 分钟"},
-      query:"706 Jurong West Street 71 Singapore 640706"
+      query:"706 Jurong West Street 71 Singapore 640706",
+      origin:"Pioneer MRT Station Singapore",
+      walk:{en:"About <b>10–12 min</b> (~750 m). From Pioneer MRT <b>Exit B</b>, walk along Jurong West Street 71 to Blk 706 — we're at <b>#01-58</b>.",
+            zh:"步行约 <b>10–12 分钟</b>（约 750 米）。从先驱站 <b>B 出口</b>，沿 Jurong West Street 71 走到 706 座，我们在 <b>#01-58</b>。"},
+      bus:{en:"Our nearest bus stop is <b>Jurong West St 71 · Blk 701</b> (Stop <b>27421</b>), served by <b>Bus 258</b> — a short walk to us. Tap below for the live route &amp; timing from Pioneer MRT.",
+           zh:"离我们最近的巴士站是 <b>Jurong West St 71 · 701 座</b>（车站编号 <b>27421</b>），有 <b>258 号巴士</b>，下车后步行几分钟即到。点击下方查看从先驱站出发的实时路线与班次。"}
     },
     wa:{textKey:"ask", labelKey:"waMsg"},
     chips:[{em:"📅",to:"book",primary:true,en:"Book a trial",zh:"预约体验课"},{em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"}]
@@ -481,16 +499,40 @@ function addWaCta(node){
 
 function addLocationCard(loc){
   const q=encodeURIComponent(loc.query);
+  const origin=encodeURIComponent(loc.origin);
+  const dirUrl=m=>"https://www.google.com/maps/dir/?api=1&origin="+origin+"&destination="+q+"&travelmode="+m;
+  const pinSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
   const card=el("div","loc-card");
   card.innerHTML=
     '<div class="loc-head">📍 '+T.locHead[lang]+'</div>'+
     '<div class="loc-addr">'+loc.addr[lang]+'</div>'+
     '<div class="loc-mrt">'+loc.mrt[lang]+'</div>'+
     '<div class="loc-map"><iframe title="Longevity Courtyard location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q='+q+'&z=16&output=embed"></iframe></div>'+
-    '<a class="loc-dir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+q+'">'+
-      '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>'+
-      T.locDir[lang]+'</a>';
-  chat.appendChild(card);scrollDown();
+    '<div class="loc-gethere">'+
+      '<div class="gh-title">🧭 '+T.ghTitle[lang]+'</div>'+
+      '<div class="gh-toggle">'+
+        '<button class="gh-tab active" data-mode="walk">'+T.ghWalkTab[lang]+'</button>'+
+        '<button class="gh-tab" data-mode="bus">'+T.ghBusTab[lang]+'</button>'+
+      '</div>'+
+      '<div class="gh-body">'+loc.walk[lang]+'</div>'+
+      '<a class="gh-go" target="_blank" rel="noopener" href="'+dirUrl("walking")+'">'+pinSvg+'<span>'+T.ghWalkLabel[lang]+'</span></a>'+
+    '</div>';
+  chat.appendChild(card);
+
+  const tabs=card.querySelectorAll(".gh-tab");
+  const body=card.querySelector(".gh-body");
+  const go=card.querySelector(".gh-go");
+  const goSpan=go.querySelector("span");
+  tabs.forEach(tab=>{
+    tab.addEventListener("click",()=>{
+      tabs.forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      const mode=tab.dataset.mode;
+      if(mode==="walk"){ body.innerHTML=loc.walk[lang]; go.href=dirUrl("walking"); goSpan.textContent=T.ghWalkLabel[lang]; }
+      else{ body.innerHTML=loc.bus[lang]; go.href=dirUrl("transit"); goSpan.textContent=T.ghBusLabel[lang]; }
+    });
+  });
+  scrollDown();
 }
 
 function addChips(chips){
