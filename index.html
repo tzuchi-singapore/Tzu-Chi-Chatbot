@@ -134,6 +134,22 @@
   .gh-go:hover{filter:brightness(1.07);transform:translateY(-1px);}
   .gh-go svg{width:19px;height:19px;}
 
+  /* results bar chart */
+  .chart-card{margin:2px 4px 20px 47px;background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 8px 22px rgba(0,48,87,.10);padding:15px 15px 13px;animation:rise .4s .05s both;}
+  .chart-head{font-weight:800;color:var(--navy);font-size:14px;margin-bottom:13px;display:flex;align-items:center;gap:7px;}
+  .bar-row{margin-bottom:11px;}
+  .bar-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:4px;gap:8px;}
+  .bar-top span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bar-val{color:var(--cyan-deep);font-weight:800;font-variant-numeric:tabular-nums;flex:0 0 auto;}
+  .bar-val.hi{color:var(--gold);}
+  .bar-track{height:12px;background:#eef4f9;border-radius:8px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:8px;width:0;background:linear-gradient(90deg,var(--cyan),var(--cyan-deep));
+    transition:width 1s cubic-bezier(.2,.8,.25,1);}
+  .bar-fill.hi{background:linear-gradient(90deg,#e6bd57,var(--gold));}
+  .chart-cap{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  @media (prefers-reduced-motion: reduce){ .bar-fill{transition:none;} }
+
   /* whatsapp cta inside chat */
   .wa-cta{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 4px 20px 47px;
     background:linear-gradient(135deg,var(--wa),var(--wa-deep));color:#fff;text-decoration:none;
@@ -224,6 +240,8 @@ const T = {
   ghBusTab:{en:"🚌 By bus", zh:"🚌 搭巴士"},
   ghWalkLabel:{en:"Walking directions", zh:"步行路线"},
   ghBusLabel:{en:"Live bus route", zh:"实时巴士路线"},
+  chartHead:{en:"Average strength improvement", zh:"平均肌力提升"},
+  chartCap:{en:"From our members' pre/post HUR SmartTouch assessments. Across these exercises, gains averaged about 14%, with several movements improving 24–42%.", zh:"数据来自会员在 HUR SmartTouch 系统的课前／课后评估。这些动作平均提升约 14%，其中多项动作提升达 24–42%。"},
 };
 
 const bookWaText={
@@ -292,14 +310,51 @@ const NODES = {
   },
   programmes:{
     text:{
-      en:"We offer <strong>two training programmes</strong>. Which one would you like to explore? 👇",
-      zh:"我们提供 <strong>两种训练课程</strong>。您想了解哪一个呢？👇"
+      en:"We offer <strong>two training programmes</strong> — and you can also see our members' <strong>real results</strong> and what makes us different. What would you like? 👇",
+      zh:"我们提供 <strong>两种训练课程</strong> — 您也可以查看会员的 <strong>真实成效</strong> 以及我们的独特之处。您想了解什么？👇"
     },
     chips:[
       {em:"💪",to:"prog1",en:"Functional Strength, Cardio & Cognitive",zh:"功能性力量·心肺·认知训练"},
       {em:"🧘",to:"prog2",en:"Stretch & Strength",zh:"伸展与力量"},
+      {em:"📊",to:"results",en:"Real member results",zh:"真实成效"},
+      {em:"⭐",to:"why",en:"Why Longevity Courtyard?",zh:"为何选择乐龄庭园？"},
       {em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"}
     ]
+  },
+  results:{
+    text:{
+      en:"<span class='hd'>📊 Real member results</span>Every rep is measured on our <strong>HUR SmartTouch</strong> system — so progress is tracked objectively, not guessed. Here's the average strength gain across key exercises:",
+      zh:"<span class='hd'>📊 真实会员成效</span>每一次训练都记录在我们的 <strong>HUR SmartTouch</strong> 系统中，进步用数据说话，而非凭感觉。以下是主要动作的平均肌力提升："
+    },
+    chart:true,
+    chips:[{em:"⭐",to:"why",en:"Why we get results",zh:"为何有效"},{em:"📅",to:"book",primary:true,en:"Book a trial",zh:"预约体验课"},{em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"}]
+  },
+  why:{
+    text:{
+      en:"<span class='hd'>⭐ Why Longevity Courtyard?</span>We're more than a room of machines — you train with a <strong>full team of specialist coaches</strong> across:<br>"+
+         "<span class='li'>💪 Muscle building & weight management</span>"+
+         "<span class='li'>🧍 Posture correction</span>"+
+         "<span class='li'>🧠 Cognitive & reaction training</span>"+
+         "<span class='li'>❤️ Cardiovascular conditioning</span>"+
+         "<span class='li'>🧘 Yoga, barre & Pilates-ball</span>"+
+         "<span class='li'>🤸 Functional & bodyweight training</span>"+
+         "<span class='li'>🥗 Nutrition & recovery</span><br>"+
+         "<span class='hd'>🔁 We train BOTH directions</span>"+
+         "Most strength work focuses on the lift (the <strong>concentric</strong> phase). But the <strong>controlled lowering</strong> — the <strong>eccentric</strong> phase — is often overlooked, and it's exactly what you use to <strong>sit down slowly, walk downstairs, and steady yourself to avoid a fall</strong>. Research links this lowering phase to better stair control and fall prevention, and it builds strength with <strong>less strain on the heart</strong>. Our HUR machines let our coaches train both phases safely.<br><br>"+
+         "<span class='hd'>🎯 A complete package</span>1-hour sessions blending strength, yoga, cognitive training, nutrition, medical coaching & sleep therapy — all professionally guided and measured with proper assessments.<br><br>That's how our members reach the results in our data. 📊",
+      zh:"<span class='hd'>⭐ 为何选择乐龄庭园？</span>我们不只是一间摆满器材的健身房 — 您将由<strong>一支多领域的专业教练团队</strong>指导，涵盖：<br>"+
+         "<span class='li'>💪 增肌与体重管理</span>"+
+         "<span class='li'>🧍 体态矫正</span>"+
+         "<span class='li'>🧠 认知与反应训练</span>"+
+         "<span class='li'>❤️ 心肺调理</span>"+
+         "<span class='li'>🧘 瑜伽、把杆(barre)与普拉提球</span>"+
+         "<span class='li'>🤸 功能性与自重训练</span>"+
+         "<span class='li'>🥗 营养与恢复</span><br>"+
+         "<span class='hd'>🔁 双向训练：举起与放下</span>"+
+         "大多数训练只重视「举起」（<strong>向心</strong>阶段），但<strong>有控制地放下</strong>（<strong>离心</strong>阶段）却常被忽略 — 而这正是您<strong>慢慢坐下、下楼梯、稳住身体防止跌倒</strong>所需的力量。研究显示，这个「放下」阶段对下楼梯的控制与预防跌倒尤其重要，而且能在<strong>对心脏负担更小</strong>的情况下增强肌力。我们的 HUR 器材让教练能安全地训练「举起」与「放下」两个阶段。<br><br>"+
+         "<span class='hd'>🎯 全方位配套</span>1 小时的课程融合力量、瑜伽、认知训练、营养、医疗指导与睡眠疗愈 — 全程由专业教练指导，并以正规评估追踪成效。<br><br>这正是我们会员取得亮眼数据的原因。📊"
+    },
+    chips:[{em:"📊",to:"results",en:"See our results",zh:"查看成效"},{em:"📅",to:"book",primary:true,en:"Book a trial",zh:"预约体验课"},{em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"}]
   },
   prog1:{
     text:{
@@ -535,6 +590,35 @@ function addLocationCard(loc){
   scrollDown();
 }
 
+/* Member results (from HUR SmartTouch group progress — average strength improvement %) */
+const RESULTS=[
+  {name:"Push Up EA", v:41.9},
+  {name:"Adduction", v:30.2},
+  {name:"Leg Extension", v:23.6},
+  {name:"Pulley Basic", v:10.4},
+  {name:"Abdomen EA", v:7.1},
+  {name:"Leg Curl", v:5.8},
+  {name:"Pull Down EA", v:4.1},
+  {name:"Abduction", v:1.6},
+  {name:"Back EA", v:1.6}
+];
+function addResultsChart(){
+  const scale=45;
+  const card=el("div","chart-card");
+  let rows="";
+  RESULTS.forEach((r,i)=>{
+    const pct=Math.max(3,(r.v/scale)*100);
+    const hi=r.v>=20?" hi":"";
+    rows+='<div class="bar-row"><div class="bar-top"><span>'+r.name+'</span>'+
+          '<span class="bar-val'+hi+'">+'+r.v.toFixed(1)+'%</span></div>'+
+          '<div class="bar-track"><div class="bar-fill'+hi+'" data-w="'+pct.toFixed(1)+'" style="transition-delay:'+(i*55)+'ms"></div></div></div>';
+  });
+  card.innerHTML='<div class="chart-head">📊 '+T.chartHead[lang]+'</div>'+rows+'<div class="chart-cap">'+T.chartCap[lang]+'</div>';
+  chat.appendChild(card);
+  requestAnimationFrame(()=>{ setTimeout(()=>{ card.querySelectorAll(".bar-fill").forEach(f=>{ f.style.width=f.dataset.w+"%"; }); },30); });
+  scrollDown();
+}
+
 function addChips(chips){
   const wrap=el("div","quick"+(chips.length===1?" single":""));
   chips.forEach(c=>{
@@ -553,6 +637,7 @@ function renderNode(id){
   setTimeout(()=>{
     typing.remove();
     addBotBubble(node.text[lang]);
+    if(node.chart) addResultsChart();
     if(node.location) addLocationCard(node.location);
     if(node.wa) addWaCta(node);
     if(node.chips) addChips(node.chips);
@@ -584,7 +669,9 @@ const INTENTS=[
   {id:"hours", terms:["hour","hours","time","times","timing","timings","open","opening","close","closing","when","schedule","operating","operation","operations","available","availability","slot","slots","what time","weekday","weekend","monday","tuesday","wednesday","thursday","friday","时间","几点","开放","营业","开门","关门","时段","什么时候","何时","时刻","星期","礼拜","周末","上课时间"]},
   {id:"contact", terms:["where","location","located","address","direction","directions","map","contact","reach","find you","get there","how to get","get to","nearby","near","mrt","subway","bus","parking","phone","call","whatsapp","number","pioneer","哪里","在哪","地址","位置","路线","地图","联系","电话","怎么去","怎么到","如何去","附近","地铁","巴士","公交","停车","号码","先驱"]},
   {id:"coaches", terms:["coach","coaches","trainer","trainers","instructor","instructors","teacher","teachers","staff","who teaches","daniel","phua","titisa","教练","老师","导师","谁教","教师","职员"]},
-  {id:"how", terms:["how it works","how does it work","how does","how do","how do you","assessment","assessments","assess","test","tests","testing","evaluation","evaluate","result","results","progress","measure","measured","improve","improvement","effective","sppb","mmse","gds","tanita","before and after","如何进行","怎么进行","流程","评估","测试","测量","成绩","进步","效果","如何运作","方式"]},
+  {id:"results", terms:["results","result","member results","real results","data","chart","charts","graph","graphs","statistics","stats","numbers","proof","how much improvement","improve by","stronger","成效","成果","数据","图表","真实成效","进步了多少"]},
+  {id:"why", terms:["why","why choose","why should","better","best","different","difference","differences","compare","comparison","versus","advantage","advantages","special","what makes","stand out","unique","为什么","为何","更好","最好","不同","区别","比较","对比","优势","特别","独特","有什么好"]},
+  {id:"how", terms:["how it works","how does it work","how does","how do","how do you","assessment","assessments","assess","test","tests","testing","evaluation","evaluate","progress","measure","measured","improvement","improve","effective","sppb","mmse","gds","tanita","before and after","如何进行","怎么进行","流程","评估","测试","测量","进步","效果","如何运作","方式"]},
   {id:"equipment", terms:["equipment","machine","machines","gear","weights","dumbbell","dumbbells","treadmill","apparatus","facility","facilities","tools","hur","器材","设备","机器","器械","哑铃","设施","工具","跑步机"]},
   {id:"prog2", terms:["stretch","stretching","flexibility","flexible","mobility","gentle","pilates","barre","balance","posture","stiff","stiffness","伸展","拉伸","柔软","柔韧","灵活","温和","普拉提","把杆","平衡","僵硬"]},
   {id:"prog1", terms:["functional","strength","strong","cardio","cardiovascular","cognitive","muscle","muscles","reaction","boxing","resistance","endurance","stamina","power","功能","力量","心肺","认知","肌肉","反应","拳击","耐力","体能","增肌"]},
