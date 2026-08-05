@@ -561,39 +561,93 @@ function renderNode(id){
 
 function go(id){ renderNode(id); }
 
-/* Free-text keyword routing */
-function route(text){
-  const t=text.toLowerCase();
-  const has=(...k)=>k.some(w=>t.includes(w));
-  if(has("book","trial","预约","体验","报名")) return "book";
-  if(has("hour","time","open","when","时间","开放","几点","营业")) return "hours";
-  if(has("price","cost","fee","package","payment","多少","价格","配套","费用","收费")) return "prices";
-  if(has("coach","trainer","teacher","staff","教练","老师")) return "coaches";
-  if(has("program","programme","class","training","course","课程","训练","课")) return "programmes";
-  if(has("assess","test","result","progress","evaluat","how it work","how does","评估","如何","怎么","流程")) return "how";
-  if(has("equip","machine","weight","gym gear","器材","设备","机器")) return "equipment";
-  if(has("where","location","address","contact","direction","reach","联系","地址","在哪","怎么去","电话")) return "contact";
-  if(has("hi","hello","hey","你好","您好","哈咯")) return "welcome";
-  return null;
+/* ---------------- Smart intent engine (offline, EN + 中文) ---------------- */
+/* Normalise: lowercase, strip punctuation, keep letters/numbers/$ and CJK, pad with spaces. */
+function norm(s){
+  let t=" "+s.toLowerCase().replace(/[’']/g,"")+" ";
+  t=t.replace(/[^\p{L}\p{N}$]+/gu," ");
+  return t.replace(/\s+/g," ");
+}
+/* A term "hits" the text: phrases, CJK, $ and longer words match as substrings;
+   short English words (≤3 chars) match on word boundaries to avoid false positives. */
+function hit(text,term){
+  if(term.includes(" ")||term==="$"||/[^\x00-\x7F]/.test(term)||term.length>=4){
+    return text.indexOf(term)>=0;
+  }
+  return text.indexOf(" "+term+" ")>=0;
+}
+/* Intents are scored; phrases count double. Earlier entries win ties. */
+const INTENTS=[
+  {id:"thanks", terms:["thank","thanks","thankyou","thank you","thx","appreciate","cheers","谢谢","感谢","多谢","谢啦","感恩"]},
+  {id:"book", terms:["book","booking","reserve","reservation","trial","try","try out","try a","give it a go","sign up","signup","register","registration","enrol","enroll","join","appointment","预约","报名","体验","试课","试试","注册","参加","预订","登记"]},
+  {id:"prices", terms:["price","pricing","cost","how much","howmuch","fee","fees","fare","charge","charges","rate","rates","package","packages","plan","plans","payment","pay","$","dollar","dollars","expensive","afford","cheap","promotion","promo","discount","subsidy","subsidise","subsidize","多少钱","多少","价格","价钱","收费","费用","配套","付款","缴费","优惠","折扣","补贴","贵","钱"]},
+  {id:"hours", terms:["hour","hours","time","times","timing","timings","open","opening","close","closing","when","schedule","operating","operation","operations","available","availability","slot","slots","what time","weekday","weekend","monday","tuesday","wednesday","thursday","friday","时间","几点","开放","营业","开门","关门","时段","什么时候","何时","时刻","星期","礼拜","周末","上课时间"]},
+  {id:"contact", terms:["where","location","located","address","direction","directions","map","contact","reach","find you","get there","how to get","get to","nearby","near","mrt","subway","bus","parking","phone","call","whatsapp","number","pioneer","哪里","在哪","地址","位置","路线","地图","联系","电话","怎么去","怎么到","如何去","附近","地铁","巴士","公交","停车","号码","先驱"]},
+  {id:"coaches", terms:["coach","coaches","trainer","trainers","instructor","instructors","teacher","teachers","staff","who teaches","daniel","phua","titisa","教练","老师","导师","谁教","教师","职员"]},
+  {id:"how", terms:["how it works","how does it work","how does","how do","how do you","assessment","assessments","assess","test","tests","testing","evaluation","evaluate","result","results","progress","measure","measured","improve","improvement","effective","sppb","mmse","gds","tanita","before and after","如何进行","怎么进行","流程","评估","测试","测量","成绩","进步","效果","如何运作","方式"]},
+  {id:"equipment", terms:["equipment","machine","machines","gear","weights","dumbbell","dumbbells","treadmill","apparatus","facility","facilities","tools","hur","器材","设备","机器","器械","哑铃","设施","工具","跑步机"]},
+  {id:"prog2", terms:["stretch","stretching","flexibility","flexible","mobility","gentle","pilates","barre","balance","posture","stiff","stiffness","伸展","拉伸","柔软","柔韧","灵活","温和","普拉提","把杆","平衡","僵硬"]},
+  {id:"prog1", terms:["functional","strength","strong","cardio","cardiovascular","cognitive","muscle","muscles","reaction","boxing","resistance","endurance","stamina","power","功能","力量","心肺","认知","肌肉","反应","拳击","耐力","体能","增肌"]},
+  {id:"programmes", terms:["program","programme","programs","programmes","class","classes","training","course","courses","workout","workouts","exercise","exercises","activity","activities","offer","offerings","课程","训练","上课","项目","活动","锻炼","运动"]},
+  {id:"eligibility", terms:["who is it for","who is this for","suitable","suit me","for me","beginner","beginners","new to this","first time","age","aged","elderly","senior","seniors","experience needed","need experience","can i join","too old","适合","适不适合","新手","没经验","第一次","年龄","年纪","老人","长者","乐龄","可以参加","会不会太老"]},
+  {id:"welcome", terms:["hi","hello","hey","hiya","good morning","good afternoon","good evening","greetings","menu","start over","你好","您好","哈咯","嗨","早上好","下午好","晚上好","菜单"]}
+];
+function matchIntent(raw){
+  const t=norm(raw); let best=null,score=0;
+  for(const it of INTENTS){
+    let s=0;
+    for(const term of it.terms){ if(hit(t,term)) s+=term.includes(" ")?2:1; }
+    if(s>score){ score=s; best=it.id; }
+  }
+  return score>0?best:null;
+}
+
+/* Special replies that aren't full nodes */
+const REPLIES={
+  thanks:{en:"You're most welcome! 🙏 Is there anything else I can help you with?",
+          zh:"不客气！🙏 还有什么可以帮您的吗？"},
+  eligibility:{
+    en:"<span class='hd'>👵 Who is it for?</span>Our programmes are made for <strong>seniors and older adults of all fitness levels</strong>. Every exercise is safe, controlled and scaled to you, so <strong>no prior experience is needed</strong> — our coaches guide you through each session and track your progress with proper assessments.<br><br>The best way to see if it fits is to try a trial. 😊",
+    zh:"<span class='hd'>👵 适合谁参加？</span>我们的课程专为<strong>各种体能水平的乐龄与年长者</strong>而设计。每个动作都安全、可控，并依据您的情况调整，<strong>无需任何运动经验</strong> — 教练会全程指导，并透过专业评估记录您的进步。<br><br>最好的方式，就是先来体验一堂。😊"}
+};
+const CHIP_BOOK={em:"📅",to:"book",primary:true,en:"Book a trial",zh:"预约体验课"};
+const CHIP_PROG={em:"🏋️",to:"programmes",en:"Our programmes",zh:"训练课程"};
+const CHIP_MENU={em:"↩️",to:"menu",ghost:true,en:"Back to menu",zh:"返回主菜单"};
+
+function botReply(pair,chips,waNode){
+  const typing=addTyping();
+  setTimeout(()=>{
+    typing.remove();
+    addBotBubble(pair[lang]);
+    if(waNode) addWaCta(waNode);
+    if(chips) addChips(chips);
+  },600);
+}
+
+function fallback(){
+  const typing=addTyping();
+  setTimeout(()=>{
+    typing.remove();
+    addBotBubble(lang==="en"
+      ? "I want to make sure I give you the right information 🙏 — here's what I can help with. Tap a topic below, or message our coach directly on WhatsApp."
+      : "为了给您正确的信息 🙏，以下是我可以帮您的。请点击下方选项，或直接用 WhatsApp 联系我们的教练。");
+    addWaCta({wa:{textKey:"ask",labelKey:"waMsg"}});
+    addChips(MENU_CHIPS);
+  },700);
+}
+
+function handleIntent(id){
+  if(!id){ fallback(); return; }
+  if(id==="thanks"){ botReply(REPLIES.thanks,MENU_CHIPS); return; }
+  if(id==="eligibility"){ botReply(REPLIES.eligibility,[CHIP_BOOK,CHIP_PROG,CHIP_MENU]); return; }
+  go(id);
 }
 
 function sendTyped(){
-  const text=input.value.trim(); if(!text)return;
+  const raw=input.value.trim(); if(!raw)return;
   input.value=""; grow(input);
-  addUser(text);
-  const dest=route(text);
-  if(dest){ go(dest); }
-  else{
-    const typing=addTyping();
-    setTimeout(()=>{
-      typing.remove();
-      addBotBubble(lang==="en"
-        ? "I'm still learning! 🙏 For anything I can't answer here, the best way is to message our coach directly on WhatsApp."
-        : "我还在学习中！🙏 若这里无法解答，最好的方式是直接用 WhatsApp 联系我们的教练。");
-      addWaCta({wa:{textKey:"ask",labelKey:"waMsg"}});
-      addChips(MENU_CHIPS);
-    },700);
-  }
+  addUser(raw);
+  handleIntent(matchIntent(raw));
 }
 
 function onKey(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendTyped();} }
