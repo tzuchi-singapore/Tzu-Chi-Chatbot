@@ -241,7 +241,7 @@ const T = {
   ghWalkLabel:{en:"Walking directions", zh:"步行路线"},
   ghBusLabel:{en:"Live bus route", zh:"实时巴士路线"},
   chartHead:{en:"Average strength improvement", zh:"平均肌力提升"},
-  chartCap:{en:"From our members' pre/post HUR SmartTouch assessments. Across these exercises, gains averaged about 14%, with several movements improving 24–42%.", zh:"数据来自会员在 HUR SmartTouch 系统的课前／课后评估。这些动作平均提升约 14%，其中多项动作提升达 24–42%。"},
+  chartCap:{en:"From our members' pre/post HUR SmartTouch assessments (Jan–Aug 2026). Across these exercises, strength (training load) improved by about 34% on average, ranging from +7% to +74%.", zh:"数据来自会员在 HUR SmartTouch 系统的课前／课后评估（2026年1月至8月）。这些动作的肌力（训练负荷）平均提升约 34%，幅度从 +7% 到 +74%。"},
 };
 
 const bookWaText={
@@ -590,25 +590,25 @@ function addLocationCard(loc){
   scrollDown();
 }
 
-/* Member results (from HUR SmartTouch group progress — average strength improvement %) */
+/* Member results — HUR SmartTouch Group Progress, Load Change % (Jan–Aug 2026) */
 const RESULTS=[
-  {name:"Push Up EA", v:41.9},
-  {name:"Adduction", v:30.2},
-  {name:"Leg Extension", v:23.6},
-  {name:"Pulley Basic", v:10.4},
-  {name:"Abdomen EA", v:7.1},
-  {name:"Leg Curl", v:5.8},
-  {name:"Pull Down EA", v:4.1},
-  {name:"Abduction", v:1.6},
-  {name:"Back EA", v:1.6}
+  {name:"Leg Extension", v:73.5},
+  {name:"Push Up EA", v:58.5},
+  {name:"Pull Down EA", v:33.1},
+  {name:"Back EA", v:32.0},
+  {name:"Leg Curl", v:28.7},
+  {name:"Pulley Basic", v:28.4},
+  {name:"Abduction", v:23.0},
+  {name:"Abdomen EA", v:21.7},
+  {name:"Adduction", v:7.0}
 ];
 function addResultsChart(){
-  const scale=45;
+  const scale=Math.max.apply(null,RESULTS.map(r=>r.v))*1.08;
   const card=el("div","chart-card");
   let rows="";
   RESULTS.forEach((r,i)=>{
     const pct=Math.max(3,(r.v/scale)*100);
-    const hi=r.v>=20?" hi":"";
+    const hi=r.v>=50?" hi":"";
     rows+='<div class="bar-row"><div class="bar-top"><span>'+r.name+'</span>'+
           '<span class="bar-val'+hi+'">+'+r.v.toFixed(1)+'%</span></div>'+
           '<div class="bar-track"><div class="bar-fill'+hi+'" data-w="'+pct.toFixed(1)+'" style="transition-delay:'+(i*55)+'ms"></div></div></div>';
